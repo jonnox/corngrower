@@ -78,15 +78,17 @@ void display(void)
 {
   int i = 0;
   float *ptr;
+  double ** dptr;
   glClear (GL_COLOR_BUFFER_BIT);
   glLoadIdentity ();
   gluLookAt(cameraCoords[0],cameraCoords[1],cameraCoords[2], 0.0, 0.0, 40.0, 0.0, 0.0, 1.0);
+  //gluLookAt(10.0,10.0,4.0, 0.0, 0.0, 2.0, 0.0, 0.0, 1.0);
   
   glRotatef(theta,0.0,0.0,1.0);
 
 
   
-  glColor3f(0.9,0.3,0.3);
+  //glColor3f(0.9,0.3,0.3);
   //glScaled(10.0,10.0,20.0);
   //glCallList(budList);
   //glCallList(segList);
@@ -95,6 +97,8 @@ void display(void)
 
   //glTranslatef(-15.0f,0.0f,0.0f);
   drawPlant(plants[0],disLists);
+
+  //drawBezierLeaf(plants[0].segments[0].leaf,21,0.1,4);
   /*
   glTranslatef(0.0f,-15.0f,0.0f);
   drawPlant(plants[1],disLists);

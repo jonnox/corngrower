@@ -354,12 +354,77 @@ void drawBezierLeafWithSpine(double*** leaf, int segments, double dt, bool highV
 
         glColor3f(0.3,0.8,0.0);
 
+        glColor3f(0.1,0.6,0.0);
+
+        // draw line far
+        p1[0] = resspine[0];
+        p1[1] = res[1];
+        p1[2] = res[2] + resspine[2];
+
+        p2[0] = prevspine[0];
+        p2[1] = prev[1];
+        p2[2] = prev[2] + prevspine[2];
+
+        p3[0] = prevspine[0];
+        p3[1] = 0.0;
+        p3[2] = prevspine[2];
+
+        calcNormal(p1,p2,p3,normal);
+
+        glNormal3dv(normal);
+        //glVertex3dv(resspine[0],res[1],res[2] + resspine[2]);
+        //glVertex3dv(prevspine[0],prev[1],prev[2] + prevspine[2]);
+        //glVertex3dv(prevspine[0],0.0,prevspine[2]);
+        glVertex3dv(p1);
+        glVertex3dv(p2);
+        glVertex3dv(p3);
+        glVertex3d(resspine[0],0.0,resspine[2]);
+        
+        calcNormal(p1,p3,p2,normal);
+        glNormal3dv(normal);
+        glVertex3d(resspine[0],0.0,resspine[2]);
+        glVertex3dv(p3);
+        glVertex3dv(p2);
+        glVertex3dv(p1);
+        
+        // draw line near
+        p1[0] = resspine[0];
+        p1[1] = 0.0;
+        p1[2] = resspine[2];
+
+        p2[0] = prevspine[0];
+        p2[1] = 0.0;
+        p2[2] = prevspine[2];
+
+        p3[0] = prevspine[0];
+        p3[1] = prevB[1];
+        p3[2] = prevB[2] + prevspine[2];
+
+        calcNormal(p1,p2,p3,normal);
+        glNormal3dv(normal);
+        //glVertex3d(resspine[0],0.0,resspine[2]);
+        //glVertex3d(prevspine[0],0.0,prevspine[2]);
+        //glVertex3d(prevspine[0],prevB[1],prevB[2] + prevspine[2]);
+        glVertex3dv(p1);
+        glVertex3dv(p2);
+        glVertex3dv(p3);
+        glVertex3d(resspine[0],resB[1],resB[2] + resspine[2]);
+
+        calcNormal(p1,p3,p2,normal);
+        glNormal3dv(normal);
+        glVertex3d(resspine[0],resB[1],resB[2] + resspine[2]);
+        glVertex3dv(p3);
+        glVertex3dv(p2);
+        glVertex3dv(p1);
+
         /*
         glVertex3d(prevspine[0],prevspine[1],prevspine[2]);
         glVertex3d(resspine[0],resspine[1],resspine[2]);
 
         glColor3f(0.1,0.6,0.0);
         */
+
+        /*
 
         glVertex3d(resspine[0],res[1],res[2] + resspine[2]);
         glVertex3d(prevspine[0],prev[1],prev[2] + prevspine[2]);
@@ -371,6 +436,7 @@ void drawBezierLeafWithSpine(double*** leaf, int segments, double dt, bool highV
         glVertex3d(prevspine[0],0.0,prevspine[2]);
         glVertex3d(prevspine[0],prevB[1],prevB[2] + prevspine[2]);
         glVertex3d(resspine[0],resB[1],resB[2] + resspine[2]);
+        */
 
         tmp = res;
         res = prev;
@@ -416,7 +482,7 @@ void drawBezierLeaf(double*** leaf, int segments, double dt, int age){
   int i,j,k,seg3i;
   double scale;
   double t, seg3;
-  double* prev,* res,* tmp, * prevspine, * resspine, *normal;
+  double* prev,* res,* tmp, * prevspine, * resspine, *normal, *p1, *p2, *p3;
   double* prevB,* resB;
   prev = (double *)malloc(sizeof(double) * 3);
   res = (double *)malloc(sizeof(double) * 3);
@@ -424,6 +490,10 @@ void drawBezierLeaf(double*** leaf, int segments, double dt, int age){
   resB = (double *)malloc(sizeof(double) * 3);
   prevspine = (double *)malloc(sizeof(double) * 3);
   resspine = (double *)malloc(sizeof(double) * 3);
+  normal = (double *)malloc(sizeof(double) * 3);
+  p1 = (double *)malloc(sizeof(double) * 3);
+  p2 = (double *)malloc(sizeof(double) * 3);
+  p3 = (double *)malloc(sizeof(double) * 3);
 
 
   glBegin(GL_QUADS); 
@@ -461,17 +531,72 @@ void drawBezierLeaf(double*** leaf, int segments, double dt, int age){
         glColor3f(0.1,0.6,0.0);
 
         // draw line far
-        
-        glVertex3d(resspine[0],res[1],res[2] + resspine[2]);
-        glVertex3d(prevspine[0],prev[1],prev[2] + prevspine[2]);
-        glVertex3d(prevspine[0],0.0,prevspine[2]);
+        p1[0] = resspine[0];
+        p1[1] = res[1];
+        p1[2] = res[2] + resspine[2];
+
+        p2[0] = prevspine[0];
+        p2[1] = prev[1];
+        p2[2] = prev[2] + prevspine[2];
+
+        p3[0] = prevspine[0];
+        p3[1] = 0.0;
+        p3[2] = prevspine[2];
+
+        calcNormal(p1,p2,p3,normal);
+
+        glNormal3dv(normal);
+        //glVertex3dv(resspine[0],res[1],res[2] + resspine[2]);
+        //glVertex3dv(prevspine[0],prev[1],prev[2] + prevspine[2]);
+        //glVertex3dv(prevspine[0],0.0,prevspine[2]);
+        glVertex3dv(p1);
+        calcNormal(p2,p3,p1,normal);
+        glNormal3dv(normal);
+        glVertex3dv(p2);
+        calcNormal(p3,p1,p2,normal);
+        glNormal3dv(normal);
+        glVertex3dv(p3);
         glVertex3d(resspine[0],0.0,resspine[2]);
+        
+        
+        calcNormal(p3,p2,p1,normal);
+        glNormal3dv(normal);
+        glVertex3d(resspine[0],0.0,resspine[2]);
+        glVertex3dv(p3);
+        glVertex3dv(p2);
+        calcNormal(p1,p3,p2,normal);
+        glNormal3dv(normal);
+        glVertex3dv(p1);
         
         // draw line near
-        glVertex3d(resspine[0],0.0,resspine[2]);
-        glVertex3d(prevspine[0],0.0,prevspine[2]);
-        glVertex3d(prevspine[0],prevB[1],prevB[2] + prevspine[2]);
+        p1[0] = resspine[0];
+        p1[1] = 0.0;
+        p1[2] = resspine[2];
+
+        p2[0] = prevspine[0];
+        p2[1] = 0.0;
+        p2[2] = prevspine[2];
+
+        p3[0] = prevspine[0];
+        p3[1] = prevB[1];
+        p3[2] = prevB[2] + prevspine[2];
+
+        calcNormal(p1,p2,p3,normal);
+        glNormal3dv(normal);
+        //glVertex3d(resspine[0],0.0,resspine[2]);
+        //glVertex3d(prevspine[0],0.0,prevspine[2]);
+        //glVertex3d(prevspine[0],prevB[1],prevB[2] + prevspine[2]);
+        glVertex3dv(p1);
+        glVertex3dv(p2);
+        glVertex3dv(p3);
         glVertex3d(resspine[0],resB[1],resB[2] + resspine[2]);
+
+        calcNormal(p1,p3,p2,normal);
+        glNormal3dv(normal);
+        glVertex3d(resspine[0],resB[1],resB[2] + resspine[2]);
+        glVertex3dv(p3);
+        glVertex3dv(p2);
+        glVertex3dv(p1);
 
         // edge to center
         /*
