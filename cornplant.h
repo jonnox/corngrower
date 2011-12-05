@@ -1,4 +1,5 @@
 #include "curveutils.h"
+#include <stdio.h>
 
 typedef struct {
   float age;
@@ -30,4 +31,4 @@ plant newPlant(float scale,
   float dh, // delta height per day
   int maturity); // Number of segments once fully grown
 
-void updatePlant(plant p, float dt);
+void updatePlant(plant &p, float dt);

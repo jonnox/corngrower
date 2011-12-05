@@ -1,7 +1,6 @@
-#include <GL/glew.h>
-#include <GL/glut.h>
 #include <stdio.h>
-#include "cornplant.h"
+#include <time.h>
+#include "glplantutils.h"
 
 /**
  * An openGL corn grower
@@ -33,6 +32,8 @@ double*** cornleafB;
 
 plant* plants;
 
+GLUquadric *qobj;
+
 /**
  * Step for curve rendering
  */
@@ -46,158 +47,20 @@ int fov = 45;
 // window width and height
 int _w=0,_h=0;
 
-void drawBezierLeaf(double*** leaf, int segments, double dt, int age){
-  int i,j,k,seg3i;
-  double scale;
-  double t, seg3;
-  double* prev,* res,* tmp, * prevspine, * resspine;
-  double* prevB,* resB;
-  prev = (double *)malloc(sizeof(double) * 3);
-  res = (double *)malloc(sizeof(double) * 3);
-  prevB = (double *)malloc(sizeof(double) * 3);
-  resB = (double *)malloc(sizeof(double) * 3);
-  prevspine = (double *)malloc(sizeof(double) * 3);
-  resspine = (double *)malloc(sizeof(double) * 3);
-
-  glBegin(GL_QUADS); 
-  glLineWidth(6);
-
-  scale = (age + 1.0) / 4.0;
-
-  if(age > 1){
-    for(i=0;i<segments;i++){
-      t = dt;
-      beziersz(leaf[0][i*3],leaf[0][i*3 + 1],leaf[0][i*3 + 2],leaf[0][i*3 + 3], 0.0, prev
-        ,scale);
-      beziersz(leaf[1][i*3],leaf[1][i*3 + 1],leaf[1][i*3 + 2],leaf[1][i*3 + 3], 0.0, prevB
-        ,scale);
-  
-      // Calculate spine
-      bezier(bezierSpine[age][0],bezierSpine[age][1],bezierSpine[age][2],bezierSpine[age][3], i/(segments*1.0), prevspine);
-
-      while(t <= 1.0){
-        // far edge
-        beziersz(leaf[0][i*3],leaf[0][i*3 + 1],leaf[0][i*3 + 2],leaf[0][i*3 + 3], t, res
-          ,scale);
-        // near edge
-        beziersz(leaf[1][i*3],leaf[1][i*3 + 1],leaf[1][i*3 + 2],leaf[1][i*3 + 3], t, resB
-          ,scale);
-        //spine
-        bezier(bezierSpine[age][0],bezierSpine[age][1],bezierSpine[age][2],bezierSpine[age][3], (i + t)/(segments*1.0), resspine);
-
-        /*
-        glColor3f(0.3,0.8,0.0);
-        glVertex3d(prevspine[0],prevspine[1],prevspine[2]);
-        glVertex3d(resspine[0],resspine[1],resspine[2]);
-        */
-
-        glColor3f(0.1,0.6,0.0);
-
-        // draw line far
-        
-        glVertex3d(resspine[0],res[1],res[2] + resspine[2]);
-        glVertex3d(prevspine[0],prev[1],prev[2] + prevspine[2]);
-        glVertex3d(prevspine[0],0.0,prevspine[2]);
-        glVertex3d(resspine[0],0.0,resspine[2]);
-        
-        // draw line near
-        glVertex3d(resspine[0],0.0,resspine[2]);
-        glVertex3d(prevspine[0],0.0,prevspine[2]);
-        glVertex3d(prevspine[0],prevB[1],prevB[2] + prevspine[2]);
-        glVertex3d(resspine[0],resB[1],resB[2] + resspine[2]);
-
-        // edge to center
-        /*
-        glVertex3d(resspine[0],res[1],res[2] + resspine[2]);
-        glVertex3d(resspine[0],resB[1],resB[2] + resspine[2]);
-        glVertex3d(resspine[0],0.0,resspine[2]);
-        */
-
-        tmp = res;
-        res = prev;
-        prev = tmp;
-
-        tmp = resB;
-        resB = prevB;
-        prevB = tmp;
-
-        tmp = resspine;
-        resspine = prevspine;
-        prevspine = tmp;
-
-        t += dt;
-      }
-    }
-    glEnd();
-  }else{
-    seg3i = segments / 3;
-    seg3 = segments / 3.0;
-    for(i=0;i< seg3i ;i++){
-      t = dt;
-      beziersz(leaf[0][i*9],leaf[0][i*9 + 3],leaf[0][i*9 + 6],leaf[0][i*9 + 9], 0.0, prev
-        ,scale);
-      beziersz(leaf[1][i*9],leaf[1][i*9 + 3],leaf[1][i*9 + 6],leaf[1][i*9 + 9], 0.0, prevB
-        ,scale);
-  
-      // Calculate spine
-      bezier(bezierSpine[age][0],bezierSpine[age][1],bezierSpine[age][2],bezierSpine[age][3], i/(seg3), prevspine);
-
-      while(t <= 1.0){
-        // far edge
-        beziersz(leaf[0][i*9],leaf[0][i*9 + 3],leaf[0][i*9 + 6],leaf[0][i*9 + 9], t, res
-          ,scale);
-        // near edge
-        beziersz(leaf[1][i*9],leaf[1][i*9 + 3],leaf[1][i*9 + 6],leaf[1][i*9 + 9], t, resB
-          ,scale);
-        //spine
-        bezier(bezierSpine[age][0],bezierSpine[age][1],bezierSpine[age][2],bezierSpine[age][3], (i + t)/(seg3), resspine);
-
-
-        glColor3f(0.3,0.8,0.0);
-
-        /*
-        glVertex3d(prevspine[0],prevspine[1],prevspine[2]);
-        glVertex3d(resspine[0],resspine[1],resspine[2]);
-
-        glColor3f(0.1,0.6,0.0);
-        */
-
-        glVertex3d(resspine[0],res[1],res[2] + resspine[2]);
-        glVertex3d(prevspine[0],prev[1],prev[2] + prevspine[2]);
-        glVertex3d(prevspine[0],0.0,prevspine[2]);
-        glVertex3d(resspine[0],0.0,resspine[2]);
-        
-        // draw line near
-        glVertex3d(resspine[0],0.0,resspine[2]);
-        glVertex3d(prevspine[0],0.0,prevspine[2]);
-        glVertex3d(prevspine[0],prevB[1],prevB[2] + prevspine[2]);
-        glVertex3d(resspine[0],resB[1],resB[2] + resspine[2]);
-
-        tmp = res;
-        res = prev;
-        prev = tmp;
-
-        tmp = resB;
-        resB = prevB;
-        prevB = tmp;
-
-        tmp = resspine;
-        resspine = prevspine;
-        prevspine = tmp;
-
-        t += dt;
-      }
-    }
-    glEnd();
-  }
-}
-
 void init(void) 
 {
    int i = 0;
    glClearColor (0.0, 0.0, 0.0, 0.0);
    glShadeModel (GL_FLAT);
    glEnable(GL_DEPTH_TEST);
+
+   //----------------------
+   // CREATE DISPLAY LISTS
+   //----------------------
+   disLists = (GLuint *)malloc(sizeof(GLuint) * 8);
+   disLists[0] = createBudList();
+   disLists[1] = createSegList();
+   //----------------------
 }
 
 void display(void)
@@ -206,36 +69,20 @@ void display(void)
   float *ptr;
   glClear (GL_COLOR_BUFFER_BIT);
   glLoadIdentity ();
-  gluLookAt(20.0, 20.0, 10.0, 0.0, 0.0, 5.0, 0.0, 0.0, 1.0);
-
+  gluLookAt(80.0, 80.0, 20.0, 0.0, 0.0, 20.0, 0.0, 0.0, 1.0);
+  
   glRotatef(theta,0.0,0.0,1.0);
 
-  glColor3f(0.9,0.3,0.3); 
 
-  drawBezierLeaf(cornleaf, 21, 0.1, 0);
+  
+  glColor3f(0.9,0.3,0.3);
+  //glScaled(10.0,10.0,20.0);
+  //glCallList(budList);
+  //glCallList(segList);
+  //drawBezierLeaf(cornleaf, 21, 0.1, 0);
+  
 
-  glRotatef(90.0,0.0,0.0,1.0);
-  drawBezierLeaf(cornleaf, 21, 0.1, 1);
-
-  glRotatef(90.0,0.0,0.0,1.0);
-  drawBezierLeaf(cornleaf, 21, 0.1, 2);
-
-  glRotatef(90.0,0.0,0.0,1.0);
-  drawBezierLeaf(cornleaf, 21, 0.1, 3);
-
-  glTranslatef(0.0,0.0,5.0);
-  glRotatef(90.0,0.0,0.0,1.0);
-
-  drawBezierLeaf(cornleafB, 21, 0.1, 0);
-
-  glRotatef(90.0,0.0,0.0,1.0);
-  drawBezierLeaf(cornleafB, 21, 0.1, 1);
-
-  glRotatef(90.0,0.0,0.0,1.0);
-  drawBezierLeaf(cornleafB, 21, 0.1, 2);
-
-  glRotatef(90.0,0.0,0.0,1.0);
-  drawBezierLeaf(cornleafB, 21, 0.1, 3);
+  drawPlant(plants[0],disLists);
 
   glFlush();
 }
@@ -292,7 +139,7 @@ void reshape (int w, int h)
    glViewport (0, 0, (GLsizei) w, (GLsizei) h); 
    glMatrixMode (GL_PROJECTION);
    glLoadIdentity ();
-   gluPerspective(fov, (GLfloat)w / (GLfloat)h, 1.0, 80.0);
+   gluPerspective(fov, (GLfloat)w / (GLfloat)h, 1.0, 180.0);
    //gluOrtho2D(-30.0,30.0,-30.0,30.0);
    glMatrixMode (GL_MODELVIEW);
    glLoadIdentity();
@@ -319,6 +166,10 @@ void keyboard(unsigned char key, int x, int y)
         if(theta > 360.0)
           theta = 0.0;
         theta += 1.0;
+        reDraw();
+        break;
+      case 46: //.
+        updatePlant(plants[0],1.0f);
         reDraw();
         break;
       default:
@@ -356,6 +207,10 @@ int main(int argc, char** argv)
    glutInitWindowSize (500, 500); 
    glutInitWindowPosition (100, 100);
    glutCreateWindow (argv[0]);
+   // Set up openGL objects
+   qobj = gluNewQuadric();
+
+   srand( time(NULL) );
    init ();
    glutDisplayFunc(display); 
    glutReshapeFunc(reshape);
@@ -364,7 +219,7 @@ int main(int argc, char** argv)
 
    seg = newSegment(1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
    plants = (plant *)malloc(sizeof(plant));
-   plants[0] = newPlant(2.0,2.0,3.0,1.0,1.0,20);
+   plants[0] = newPlant(2.0,1.0,7.0,0.15,0.15,20);
    cornleaf = plants[0].segments[0].leaf;
 
    cornleafB = createLeaf(21);
@@ -378,3 +233,16 @@ int main(int argc, char** argv)
    glutMainLoop();
    return 0;
 }
+
+/*
+static double budTip[7][3] = {
+    {-1.000,0.000,0.000000},
+    {-0.866,-0.500,0.397940},
+    {-0.500,-0.866,0.602060},
+    {-0.000,-1.000,0.740363},
+    {0.500,-0.866,0.845098},
+    {0.866,-0.500,0.929419},
+    {1.000,0.000,1.000000}
+};*/
+
+

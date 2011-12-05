@@ -58,10 +58,10 @@ double*** createLeaf(int segments){
 
 	for(i=0;i<3;i++){
 		leaf[0][i][0] = x;
-		leaf[0][i][1] = -0.5;
+		leaf[0][i][1] = -0.5 - (i * 0.1);
 		leaf[0][i][2] = 0.0;
 		leaf[1][i][0] = x;
-		leaf[1][i][1] = 0.5;
+		leaf[1][i][1] = 0.5 + (i * 0.1);
 		leaf[1][i][2] = 0.0;
 		x = x + dx;
 	}
@@ -69,8 +69,8 @@ double*** createLeaf(int segments){
 	for(i=3;i<n;i++){
 		leaf[0][i][0] = x;
 		leaf[1][i][0] = x;
-		leaf[0][i][1] = -0.5;
-		leaf[1][i][1] = 0.5;
+		leaf[0][i][1] = -0.9;
+		leaf[1][i][1] = 0.9;
 		rndA = (rand() * 1.0) / RAND_MAX;
 		rndB = ((rand() * 1.0) / RAND_MAX) * 0.4;
 		rndC = ((rand() * 1.0) / RAND_MAX) * -0.4;
@@ -84,16 +84,16 @@ double*** createLeaf(int segments){
     x += dx;
 	}
 
-	leaf[0][n - 5][1] = -15.0/32.0;
-	leaf[0][n - 4][1] = -13.0/32.0;
-	leaf[0][n - 3][1] = -10.0/32.0;
-	leaf[0][n - 2][1] = -6.0/32.0;
+	leaf[0][n - 5][1] = -24.0/32.0;
+	leaf[0][n - 4][1] = -21.0/32.0;
+	leaf[0][n - 3][1] = -15.0/32.0;
+	leaf[0][n - 2][1] = -9.0/32.0;
 	leaf[0][n - 1][1] = 0.0;
 
-	leaf[1][n - 5][1] = 15.0/32.0;
-	leaf[1][n - 4][1] = 13.0/32.0;
-	leaf[1][n - 3][1] = 10.0/32.0;
-	leaf[1][n - 2][1] = 6.0/32.0;
+	leaf[1][n - 5][1] = 24.0/32.0;
+	leaf[1][n - 4][1] = 21.0/32.0;
+	leaf[1][n - 3][1] = 15.0/32.0;
+	leaf[1][n - 2][1] = 9.0/32.0;
 	leaf[1][n - 1][1] = 0.0;
 
 	return leaf;
