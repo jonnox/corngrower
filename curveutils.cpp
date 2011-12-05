@@ -99,6 +99,8 @@ double*** createLeaf(int segments){
 	return leaf;
 }
 
-void calcNormal(double* p0, double* p1, double* p2, double* norm){
-  
+void calcNormal(double* p1, double* p2, double* p3, double* norm){
+    norm[0] = (p2[1] - p1[1]) * (p3[2] - p1[2]) - (p2[2] - p1[2]) * (p3[1] - p1[1]);
+		norm[1] = (p2[2] - p1[2]) * (p3[0] - p1[0]) - (p2[0] - p1[0]) * (p3[2] - p1[2]);
+		norm[2] = (p2[0] - p1[0]) * (p3[1] - p1[1]) - (p2[1] - p1[1]) * (p3[0] - p1[0]);
 }

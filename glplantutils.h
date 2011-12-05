@@ -9,4 +9,5 @@ GLuint createBudList();
 GLuint createSegList();
 void drawPlant(plant p, GLuint *lst);
 void drawBezierLeaf(double*** leaf, int segments, double dt, int age);
+void drawBezierLeafWithSpine(double*** leaf, int segments, double dt, bool highVariance, double** spine);
 

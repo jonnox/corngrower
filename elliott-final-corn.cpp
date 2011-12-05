@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <time.h>
 #include "glplantutils.h"
+#include "textfile.h"
 
 /**
  * An openGL corn grower
@@ -12,13 +13,23 @@
 void reshape(int w, int h);
 void reDraw();
 void resetAll();
+void shaders_cleanup();
+
+int prevMouseX, prevMouseY;
 
 float theta = 0.0;
+float thetalr,thetaud;
+
+// FRAGMENT SHADER
+GLuint shader_v, shader_f, shader_f2, shaderprogram_p, normal_texture;
+
+GLuint leafList, budList, planeList, trunkList;
+
 
 /**
  * Coordinates of the camera. Default is 10,10,10.
  */
-float cameraCoords[3] = {10.0,10.0,10.0};
+float cameraCoords[3] = {40.0,40.0,40.0};
 
 short click = 0;
 
@@ -69,7 +80,7 @@ void display(void)
   float *ptr;
   glClear (GL_COLOR_BUFFER_BIT);
   glLoadIdentity ();
-  gluLookAt(80.0, 80.0, 20.0, 0.0, 0.0, 20.0, 0.0, 0.0, 1.0);
+  gluLookAt(cameraCoords[0],cameraCoords[1],cameraCoords[2], 0.0, 0.0, 40.0, 0.0, 0.0, 1.0);
   
   glRotatef(theta,0.0,0.0,1.0);
 
@@ -82,7 +93,16 @@ void display(void)
   //drawBezierLeaf(cornleaf, 21, 0.1, 0);
   
 
+  //glTranslatef(-15.0f,0.0f,0.0f);
   drawPlant(plants[0],disLists);
+  /*
+  glTranslatef(0.0f,-15.0f,0.0f);
+  drawPlant(plants[1],disLists);
+  glTranslatef(15.0f,0.0,0.0);
+  drawPlant(plants[2],disLists);
+  glTranslatef(0.0f,15.0f,0.0f);
+  drawPlant(plants[3],disLists);
+  */
 
   glFlush();
 }
@@ -139,7 +159,7 @@ void reshape (int w, int h)
    glViewport (0, 0, (GLsizei) w, (GLsizei) h); 
    glMatrixMode (GL_PROJECTION);
    glLoadIdentity ();
-   gluPerspective(fov, (GLfloat)w / (GLfloat)h, 1.0, 180.0);
+   gluPerspective(fov, (GLfloat)w / (GLfloat)h, 1.0, 280.0);
    //gluOrtho2D(-30.0,30.0,-30.0,30.0);
    glMatrixMode (GL_MODELVIEW);
    glLoadIdentity();
@@ -169,7 +189,22 @@ void keyboard(unsigned char key, int x, int y)
         reDraw();
         break;
       case 46: //.
-        updatePlant(plants[0],1.0f);
+        updatePlant(plants[0],0.5f);
+        //updatePlant(plants[1],1.0f);
+        //updatePlant(plants[2],1.0f);
+        //updatePlant(plants[3],1.0f);
+        reDraw();
+        break;
+      case 119: //w
+        cameraCoords[2] += 5.0f;
+        cameraCoords[1] += 2.0f;
+        cameraCoords[0] += 2.0f;
+        reDraw();
+        break;
+      case 115: //s
+        cameraCoords[2] -= 5.0f;
+        cameraCoords[1] -= 2.0f;
+        cameraCoords[0] -= 2.0f;
         reDraw();
         break;
       default:
@@ -197,6 +232,62 @@ void mouseClick(int button, int state, int x, int y){
   }
 }
 
+void mouse(int button, int state, int x, int y){
+  //printf("button:%d state:%d x:%d y:%d\n",button,state,x,y);
+  if(state == GLUT_DOWN){
+    prevMouseX = x;
+    prevMouseY = y;
+  }
+}
+
+/**
+ * Activates when mouse is clicked and dragged
+ */
+void mousemove(int x, int y){
+  //printf("(Drag x:%d y:%d)",x,y);
+  thetalr = (float)(x - prevMouseX);
+  thetaud = (float)(x - prevMouseY);
+  reDraw();
+}
+
+void shaders_cleanup()
+{
+	glDetachShader(shaderprogram_p, shader_v);
+	glDetachShader(shaderprogram_p, shader_f);
+	glDetachShader(shaderprogram_p, shader_f2);
+}
+
+
+void shaders_setup() 
+{
+	shader_v = glCreateShader(GL_VERTEX_SHADER);
+	shader_f = glCreateShader(GL_FRAGMENT_SHADER);
+	shader_f2 = glCreateShader(GL_FRAGMENT_SHADER);
+
+	//char *shadersource_v=NULL, *shadersource_f=NULL, *shadersource_f2=NULL;
+	const char * shadersource_v = (const char*) textFileRead("toon.vert");
+	const char * shadersource_f = (const char*) textFileRead("toon.frag");
+	//const char * shadersource_f2 = (const char*) textFileRead("toon2.frag");
+	glShaderSource(shader_v, 1, &shadersource_v, NULL);
+	glShaderSource(shader_f, 1, &shadersource_f, NULL);
+	//glShaderSource(shader_f2, 1, &shadersource_f2, NULL);
+
+	free((void*) shadersource_v);
+	free((void*) shadersource_f);
+	//free((void*) shadersource_f2);
+
+	glCompileShader(shader_v);
+	glCompileShader(shader_f);
+	//glCompileShader(shader_f2);
+
+	shaderprogram_p = glCreateProgram();
+	glAttachShader(shaderprogram_p,shader_f);
+	//glAttachShader(shaderprogram_p,shader_f2);
+	glAttachShader(shaderprogram_p,shader_v);
+
+	glLinkProgram(shaderprogram_p);
+	glUseProgram(shaderprogram_p);
+}
 
 int main(int argc, char** argv)
 {
@@ -217,12 +308,21 @@ int main(int argc, char** argv)
    glutKeyboardFunc(keyboard);
    glutMouseFunc(mouseClick);
 
-   seg = newSegment(1.0f, 1.0f, 0.0f, 0.0f, 1.0f);
-   plants = (plant *)malloc(sizeof(plant));
-   plants[0] = newPlant(2.0,1.0,7.0,0.15,0.15,20);
-   cornleaf = plants[0].segments[0].leaf;
+   glutMouseFunc(mouse);
+   glutMotionFunc(mousemove);
 
-   cornleafB = createLeaf(21);
+   glEnable(GL_DEPTH_TEST);
+   glEnable(GL_CULL_FACE);
+
+   glewInit();
+   shaders_setup();
+
+
+   plants = (plant *)malloc(sizeof(plant) * 4);
+   plants[0] = newPlant(1.0,1.0,7.0,0.15,0.15,20);
+   plants[1] = newPlant(1.0,1.0,7.0,0.15,0.15,20);
+   plants[2] = newPlant(1.0,1.0,7.0,0.15,0.15,20);
+   plants[3] = newPlant(1.0,1.0,7.0,0.15,0.15,20);
 
 
    /*
@@ -233,16 +333,3 @@ int main(int argc, char** argv)
    glutMainLoop();
    return 0;
 }
-
-/*
-static double budTip[7][3] = {
-    {-1.000,0.000,0.000000},
-    {-0.866,-0.500,0.397940},
-    {-0.500,-0.866,0.602060},
-    {-0.000,-1.000,0.740363},
-    {0.500,-0.866,0.845098},
-    {0.866,-0.500,0.929419},
-    {1.000,0.000,1.000000}
-};*/
-
-
