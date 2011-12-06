@@ -96,7 +96,6 @@ bool updatePlant(plant &p, float dt){
             p.segments[currSeg].leafscale * 1.1f
             );
           p.numOfSegments++;
-          printf("Created new bud: %d\n",p.numOfSegments);
         }
       }
     }

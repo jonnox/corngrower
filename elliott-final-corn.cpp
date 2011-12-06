@@ -19,15 +19,18 @@ void shaders_cleanup();
 POINT ptCursorPos;
 int cX,cY;
 
-int prevMouseX, prevMouseY;
+int prevMouseX, prevMouseY, numOfPlants;
 
 float theta = 0.0;
 float thetalr,thetaud;
+
+float *rndTheta;
 
 // FRAGMENT SHADER
 GLuint shader_v, shader_f, shader_f2, shaderprogram_p, normal_texture;
 
 GLuint leafList, budList, planeList, trunkList;
+GLuint *plantLists;
 
 
 /**
@@ -118,7 +121,7 @@ static void timerCallBack(int value){
 
 void display(void)
 {
-  int i = 0,j;
+  int i = 0,j,k;
   float *ptr;
   double ** icp;
   icp = (double **)malloc(sizeof(double *) * 4);
@@ -131,62 +134,65 @@ void display(void)
   
   glRotatef(theta,0.0,0.0,1.0);
 
-  //drawPlant(plants[0],disLists);
+  drawPlant(plants[0],disLists);
+  
+  //++++++++++++++++++++++++
+  // CORN FIELD EXAMPLE
+  //++++++++++++++++++++++++
+  /*
+  glScalef(0.1,0.1,0.1);
+  for(i=0;i < (numOfPlants / 20);i++){
+    glTranslatef(rndTheta[i + 1],-80.0 + rndTheta[i],0.0);
+    glPushMatrix();
+    glTranslatef(-400.0,0.0,0.0);
+    for(j=0;j<10;j++){
+          glTranslatef(80.0 + rndTheta[i+j],0.0,0.0);
+          glPushMatrix();
+            glRotatef(rndTheta[i+j],0.0,0.0,1.0);
+            glCallList(plantLists[i + j]);
+          glPopMatrix();
+    }
+    glPopMatrix();
+  }
+  */
+
+  /*
+  //++++++++++++++++++++++++
+  // LEAF EXAMPLE
+  //++++++++++++++++++++++++
   icp = (double **)malloc(sizeof(double *) * 4);
-  glTranslatef(-20.0,-20.0,0.0);
-  glPushMatrix();
-      for(i=0;i<4;i++){
+  for(i=0;i<4;i++){
         icp[i] = (double *)malloc(sizeof(double) * 3);
+  }
+
+  glPushMatrix();
+  glTranslatef(-15.0,-15.0,-5.0);
+  for(k=0;k<5;k++){
+    glTranslatef(5.0,5.0,0.0);
+      for(i=0;i<4;i++){
         for(j=0;j<3;j++){
-          icp[i][j] = bezierSpine[0][i][j];
+          icp[i][j] = bezierSpine[k][i][j];
         }
       }
       drawBezierLeafWithSpine(plants[0].segments[0].leaf, 21, 0.1, false, icp);
+  }
   glPopMatrix();
 
-  glTranslatef(5.0,5.0,0.0);
+  glRotatef(180,0.0,0.0,1.0);
+
   glPushMatrix();
+  glTranslatef(-15.0,-15.0,5.0);
+  for(k=0;k<5;k++){
+    glTranslatef(5.0,5.0,0.0);
       for(i=0;i<4;i++){
-        icp[i] = (double *)malloc(sizeof(double) * 3);
         for(j=0;j<3;j++){
-          icp[i][j] = bezierSpine[1][i][j];
+          icp[i][j] = bezierSpine[k][i][j];
         }
       }
       drawBezierLeafWithSpine(plants[0].segments[0].leaf, 21, 0.1, false, icp);
+  }
   glPopMatrix();
-
-  glTranslatef(5.0,5.0,0.0);
-  glPushMatrix();
-      for(i=0;i<4;i++){
-        icp[i] = (double *)malloc(sizeof(double) * 3);
-        for(j=0;j<3;j++){
-          icp[i][j] = bezierSpine[2][i][j];
-        }
-      }
-      drawBezierLeafWithSpine(plants[0].segments[0].leaf, 21, 0.1, true, icp);
-  glPopMatrix();
-
-  glTranslatef(5.0,5.0,0.0);
-  glPushMatrix();
-      for(i=0;i<4;i++){
-        icp[i] = (double *)malloc(sizeof(double) * 3);
-        for(j=0;j<3;j++){
-          icp[i][j] = bezierSpine[3][i][j];
-        }
-      }
-      drawBezierLeafWithSpine(plants[0].segments[0].leaf, 21, 0.1, true, icp);
-  glPopMatrix();
-
-  glTranslatef(5.0,5.0,0.0);
-  glPushMatrix();
-      for(i=0;i<4;i++){
-        icp[i] = (double *)malloc(sizeof(double) * 3);
-        for(j=0;j<3;j++){
-          icp[i][j] = bezierSpine[4][i][j];
-        }
-      }
-      drawBezierLeafWithSpine(plants[0].segments[0].leaf, 21, 0.1, true, icp);
-  glPopMatrix();
+  */
 
   glutSwapBuffers();
 }
@@ -259,6 +265,7 @@ void reshape (int w, int h)
 
 void keyboard(unsigned char key, int x, int y)
 {
+  int i;
    switch (key) {
       case 27: //Esc
          exit(0);
@@ -289,7 +296,7 @@ void keyboard(unsigned char key, int x, int y)
           //cameraCoords[2] -= 1.8f;
           cameraCoords[1] += 2.0f;
           cameraCoords[0] += 2.0f;
-          lookAt[2] -= 0.5f;
+          //lookAt[2] -= 0.3f;
           if(theta > 360.0)
             theta = 0.0;
           theta += 2.0;
@@ -311,19 +318,21 @@ void keyboard(unsigned char key, int x, int y)
           lookAt[2] += 0.3f;
           vidStep++;
         }
-        //updatePlant(plants[1],1.0f);
-        //updatePlant(plants[2],1.0f);
-        //updatePlant(plants[3],1.0f);
         reDraw();
+        break;
+      case 44:
+        for(i=0;i< numOfPlants ; i++){
+          updatePlant(plants[i],0.5f);
+        }
         break;
       case 119: //w
         cameraCoords[1] -= 2.0f;
-        cameraCoords[0] -= 2.0f;
+        //cameraCoords[0] -= 2.0f;
         reDraw();
         break;
       case 115: //s
         cameraCoords[1] += 2.0f;
-        cameraCoords[0] += 2.0f;
+        //cameraCoords[0] += 2.0f;
         reDraw();
         break;
       case 101: //e
@@ -427,6 +436,7 @@ void shaders_setup()
 int main(int argc, char** argv)
 {
   float *** test;
+  int i,j,k;
   segment seg;
    glutInit(&argc, argv);
    glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGB | GLUT_ACCUM);
@@ -452,12 +462,31 @@ int main(int argc, char** argv)
    glewInit();
    shaders_setup();
 
+   /*
+   //++++++++++++++++++++++++
+  // CORN FIELD EXAMPLE
+  //++++++++++++++++++++++++
+   numOfPlants = 200;
+   plantLists = (GLuint *)malloc(sizeof(GLuint) * numOfPlants);
+   rndTheta = (float *)malloc(sizeof(float) * numOfPlants);
+   plants = (plant *)malloc(sizeof(plant) * numOfPlants);
+   for(i=0;i<numOfPlants;i++){
+      plants[i] = newPlant(2.0,1.0,7.0,0.1,0.1,20);
+      while(updatePlant(plants[i],0.1f)){
+      }
+      plantLists[i] = createPlantList(plants[i],disLists);
+      rndTheta[i] = (rand() % 100) * 0.1f - 5.0f;
+   }
+   */
 
-   plants = (plant *)malloc(sizeof(plant) * 4);
-   plants[0] = newPlant(2.0,1.0,7.0,0.1,0.1,20);
-   plants[1] = newPlant(1.0,1.0,7.0,0.15,0.15,20);
-   plants[2] = newPlant(1.0,1.0,7.0,0.15,0.15,20);
-   plants[3] = newPlant(1.0,1.0,7.0,0.15,0.15,20);
+   //++++++++++++++++++++++++
+  // SINGLE GORWING EXAMPLE
+  //++++++++++++++++++++++++
+  plants = (plant *)malloc(sizeof(plant));
+  plants[0] = newPlant(2.0,1.0,7.0,0.1,0.1,20);
+  cameraCoords[2] = 30.0;
+
+
 
    int cX = GetSystemMetrics(SM_CXSCREEN);
    int cY = GetSystemMetrics(SM_CYSCREEN);

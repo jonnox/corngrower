@@ -748,6 +748,14 @@ GLuint createLeafLists(int step){
 }
 
 
+GLuint createPlantList(plant p, GLuint *lst){
+  GLuint newList;
+  newList = glGenLists(1);
+  glNewList(newList, GL_COMPILE);
+    drawPlant(p,lst);
+  glEndList();
+  return newList;
+}
 
 
 
