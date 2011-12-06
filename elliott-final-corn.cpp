@@ -2,6 +2,7 @@
 #include <time.h>
 #include "glplantutils.h"
 #include "textfile.h"
+#include <Windows.h>
 
 /**
  * An openGL corn grower
@@ -14,6 +15,9 @@ void reshape(int w, int h);
 void reDraw();
 void resetAll();
 void shaders_cleanup();
+
+POINT ptCursorPos;
+int cX,cY;
 
 int prevMouseX, prevMouseY;
 
@@ -29,7 +33,8 @@ GLuint leafList, budList, planeList, trunkList;
 /**
  * Coordinates of the camera. Default is 10,10,10.
  */
-float cameraCoords[3] = {40.0,40.0,40.0};
+float cameraCoords[3] = {15.0,15.0,0.0};
+float lookAt[3] = {0.0,0.0,0.0};
 
 short click = 0;
 
@@ -37,6 +42,7 @@ short click = 0;
  * Degree of bezier curve
  */
 int n = 3;
+int vidStep = 0;
 
 double*** cornleaf;
 double*** cornleafB;
@@ -70,45 +76,119 @@ void init(void)
    //----------------------
    disLists = (GLuint *)malloc(sizeof(GLuint) * 8);
    disLists[0] = createBudList();
-   disLists[1] = createSegList();
+   disLists[1] = createLeafLists(0);
+   disLists[2] = createLeafLists(1);
+   disLists[3] = createLeafLists(2);
+   disLists[4] = createSegList();
    //----------------------
+}
+
+static void timerCallBack(int value){
+
+  updatePlant(plants[0],0.5f);
+        if(value > 200){
+          if(theta > 360.0)
+            theta = 0.0;
+          theta += 4.0;
+        }else if(value > 120){
+          cameraCoords[1] += 2.0f;
+          cameraCoords[0] += 2.0f;
+          lookAt[2] -= 0.5f;
+          if(theta > 360.0)
+            theta = 0.0;
+          theta += 2.0;
+          value++;
+        }else if(value > 40){
+          cameraCoords[2] += 1.8f;
+          lookAt[2] += 1.7f;
+          value++;
+          cameraCoords[1] += 0.5f;
+          cameraCoords[0] += 0.5f;
+        }else if(value > 10){
+          cameraCoords[2] += 0.8f;
+          lookAt[2] += 0.7f;
+          value++;
+        }else{
+          cameraCoords[2] += 1.0f;
+          lookAt[2] += 0.3f;
+          value++;
+        }
+        reDraw();
 }
 
 void display(void)
 {
-  int i = 0;
+  int i = 0,j;
   float *ptr;
-  double ** dptr;
+  double ** icp;
+  icp = (double **)malloc(sizeof(double *) * 4);
+
   glClear (GL_COLOR_BUFFER_BIT);
   glLoadIdentity ();
-  gluLookAt(cameraCoords[0],cameraCoords[1],cameraCoords[2], 0.0, 0.0, 40.0, 0.0, 0.0, 1.0);
+  gluLookAt(cameraCoords[0],cameraCoords[1],cameraCoords[2],
+    lookAt[0], lookAt[1], lookAt[2], 0.0, 0.0, 1.0);
   //gluLookAt(10.0,10.0,4.0, 0.0, 0.0, 2.0, 0.0, 0.0, 1.0);
   
   glRotatef(theta,0.0,0.0,1.0);
 
+  //drawPlant(plants[0],disLists);
+  icp = (double **)malloc(sizeof(double *) * 4);
+  glTranslatef(-20.0,-20.0,0.0);
+  glPushMatrix();
+      for(i=0;i<4;i++){
+        icp[i] = (double *)malloc(sizeof(double) * 3);
+        for(j=0;j<3;j++){
+          icp[i][j] = bezierSpine[0][i][j];
+        }
+      }
+      drawBezierLeafWithSpine(plants[0].segments[0].leaf, 21, 0.1, false, icp);
+  glPopMatrix();
 
-  
-  //glColor3f(0.9,0.3,0.3);
-  //glScaled(10.0,10.0,20.0);
-  //glCallList(budList);
-  //glCallList(segList);
-  //drawBezierLeaf(cornleaf, 21, 0.1, 0);
-  
+  glTranslatef(5.0,5.0,0.0);
+  glPushMatrix();
+      for(i=0;i<4;i++){
+        icp[i] = (double *)malloc(sizeof(double) * 3);
+        for(j=0;j<3;j++){
+          icp[i][j] = bezierSpine[1][i][j];
+        }
+      }
+      drawBezierLeafWithSpine(plants[0].segments[0].leaf, 21, 0.1, false, icp);
+  glPopMatrix();
 
-  //glTranslatef(-15.0f,0.0f,0.0f);
-  drawPlant(plants[0],disLists);
+  glTranslatef(5.0,5.0,0.0);
+  glPushMatrix();
+      for(i=0;i<4;i++){
+        icp[i] = (double *)malloc(sizeof(double) * 3);
+        for(j=0;j<3;j++){
+          icp[i][j] = bezierSpine[2][i][j];
+        }
+      }
+      drawBezierLeafWithSpine(plants[0].segments[0].leaf, 21, 0.1, true, icp);
+  glPopMatrix();
 
-  //drawBezierLeaf(plants[0].segments[0].leaf,21,0.1,4);
-  /*
-  glTranslatef(0.0f,-15.0f,0.0f);
-  drawPlant(plants[1],disLists);
-  glTranslatef(15.0f,0.0,0.0);
-  drawPlant(plants[2],disLists);
-  glTranslatef(0.0f,15.0f,0.0f);
-  drawPlant(plants[3],disLists);
-  */
+  glTranslatef(5.0,5.0,0.0);
+  glPushMatrix();
+      for(i=0;i<4;i++){
+        icp[i] = (double *)malloc(sizeof(double) * 3);
+        for(j=0;j<3;j++){
+          icp[i][j] = bezierSpine[3][i][j];
+        }
+      }
+      drawBezierLeafWithSpine(plants[0].segments[0].leaf, 21, 0.1, true, icp);
+  glPopMatrix();
 
-  glFlush();
+  glTranslatef(5.0,5.0,0.0);
+  glPushMatrix();
+      for(i=0;i<4;i++){
+        icp[i] = (double *)malloc(sizeof(double) * 3);
+        for(j=0;j<3;j++){
+          icp[i][j] = bezierSpine[4][i][j];
+        }
+      }
+      drawBezierLeafWithSpine(plants[0].segments[0].leaf, 21, 0.1, true, icp);
+  glPopMatrix();
+
+  glutSwapBuffers();
 }
 
 /**
@@ -131,6 +211,12 @@ void decFOV(){
     fov = fov - 5;
     reDraw(); // Redraw the objects in the window
   }
+}
+
+void MouseUpdate(){
+  GetCursorPos(&ptCursorPos);
+  (ptCursorPos.x - cX);
+  SetCursorPos(cX,cY);
 }
 
 /**
@@ -163,7 +249,7 @@ void reshape (int w, int h)
    glViewport (0, 0, (GLsizei) w, (GLsizei) h); 
    glMatrixMode (GL_PROJECTION);
    glLoadIdentity ();
-   gluPerspective(fov, (GLfloat)w / (GLfloat)h, 1.0, 280.0);
+   gluPerspective(fov, (GLfloat)w / (GLfloat)h, 1.0, 380.0);
    //gluOrtho2D(-30.0,30.0,-30.0,30.0);
    glMatrixMode (GL_MODELVIEW);
    glLoadIdentity();
@@ -194,21 +280,66 @@ void keyboard(unsigned char key, int x, int y)
         break;
       case 46: //.
         updatePlant(plants[0],0.5f);
+        if(vidStep > 200){
+          if(theta > 360.0)
+            theta = 0.0;
+          theta += 4.0;
+          vidStep++;
+        }else if(vidStep > 120){
+          //cameraCoords[2] -= 1.8f;
+          cameraCoords[1] += 2.0f;
+          cameraCoords[0] += 2.0f;
+          lookAt[2] -= 0.5f;
+          if(theta > 360.0)
+            theta = 0.0;
+          theta += 2.0;
+          vidStep++;
+        }else if(vidStep > 40){
+          cameraCoords[2] += 1.8f;
+          lookAt[2] += 1.7f;
+          //printf("%d\n",vidStep);
+          vidStep++;
+          cameraCoords[1] += 0.5f;
+          cameraCoords[0] += 0.5f;
+        }else if(vidStep > 10){
+          cameraCoords[2] += 0.8f;
+          lookAt[2] += 0.7f;
+          //printf("%d\n",vidStep);
+          vidStep++;
+        }else{
+          cameraCoords[2] += 1.0f;
+          lookAt[2] += 0.3f;
+          vidStep++;
+        }
         //updatePlant(plants[1],1.0f);
         //updatePlant(plants[2],1.0f);
         //updatePlant(plants[3],1.0f);
         reDraw();
         break;
       case 119: //w
-        cameraCoords[2] += 5.0f;
+        cameraCoords[1] -= 2.0f;
+        cameraCoords[0] -= 2.0f;
+        reDraw();
+        break;
+      case 115: //s
         cameraCoords[1] += 2.0f;
         cameraCoords[0] += 2.0f;
         reDraw();
         break;
-      case 115: //s
-        cameraCoords[2] -= 5.0f;
-        cameraCoords[1] -= 2.0f;
-        cameraCoords[0] -= 2.0f;
+      case 101: //e
+        lookAt[2] += 2.0f;
+        reDraw();
+        break;
+      case 100: //d
+        lookAt[2] -= 2.0f;
+        reDraw();
+        break;
+      case 114: //r
+        cameraCoords[2] += 2.0f;
+        reDraw();
+        break;
+      case 102://f
+        cameraCoords[2] -= 2.0f;
         reDraw();
         break;
       default:
@@ -298,7 +429,7 @@ int main(int argc, char** argv)
   float *** test;
   segment seg;
    glutInit(&argc, argv);
-   glutInitDisplayMode (GLUT_SINGLE | GLUT_RGB | GLUT_ACCUM);
+   glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGB | GLUT_ACCUM);
    glutInitWindowSize (500, 500); 
    glutInitWindowPosition (100, 100);
    glutCreateWindow (argv[0]);
@@ -323,17 +454,20 @@ int main(int argc, char** argv)
 
 
    plants = (plant *)malloc(sizeof(plant) * 4);
-   plants[0] = newPlant(1.0,1.0,7.0,0.15,0.15,20);
+   plants[0] = newPlant(2.0,1.0,7.0,0.1,0.1,20);
    plants[1] = newPlant(1.0,1.0,7.0,0.15,0.15,20);
    plants[2] = newPlant(1.0,1.0,7.0,0.15,0.15,20);
    plants[3] = newPlant(1.0,1.0,7.0,0.15,0.15,20);
 
+   int cX = GetSystemMetrics(SM_CXSCREEN);
+   int cY = GetSystemMetrics(SM_CYSCREEN);
 
    /*
     * Print welcome message
     */
      printf("Welcome to Corn Grower\n");
      printf(" By: Jon Elliott\n");
+     //glutTimerFunc(1000, timerCallback,0);
    glutMainLoop();
    return 0;
 }

@@ -34,6 +34,10 @@ plant newPlant(float scale,
     newplant.segments = (segment *)malloc(sizeof(segment) * (newplant.maturity + 1));
     newplant.segments[0] = newSegment(iwidth, iheight, 0.0f, 0.0f, 1.0);
     newplant.segments[1] = newSegment(iwidth, iheight, 0.0f, 0.0f, 1.0);
+    updatePlant(newplant,1.0);
+    updatePlant(newplant,1.0);
+    updatePlant(newplant,1.0);
+    updatePlant(newplant,1.0);
 
     return newplant;
 }
@@ -41,7 +45,7 @@ plant newPlant(float scale,
 /**
  * Perform a growth time step for a given plant, dt max is 1 day.
  */
-void updatePlant(plant &p, float dt){
+bool updatePlant(plant &p, float dt){
   int currSeg;
   float age,newage,dtdh,dtdw,tdt;
   if(dt > 1.0f)
@@ -50,8 +54,21 @@ void updatePlant(plant &p, float dt){
   dtdw = dt * p.dw;
   tdt = (dt / 10.0f) + 1.0f;
 
-  if(p.numOfSegments == p.maturity)
-    return;
+  if(p.numOfSegments == p.maturity){
+    if(p.segments[p.numOfSegments - 1].age < 10.0){
+      for(currSeg = 1; currSeg <= p.numOfSegments; currSeg++){
+        age = p.segments[currSeg].age;
+        p.segments[currSeg].age += dt;
+        newage = p.segments[currSeg].age;
+
+        // Increase width and height of node
+        p.segments[currSeg].height += dtdh;
+        p.segments[currSeg].width += dtdh;
+      }
+      return true;
+    }
+    return false;
+  }
 
   for(currSeg = 1; currSeg < p.numOfSegments; currSeg++){
     age = p.segments[currSeg].age;
@@ -84,4 +101,5 @@ void updatePlant(plant &p, float dt){
       }
     }
   }
+  return true;
 }

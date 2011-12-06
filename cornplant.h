@@ -31,4 +31,4 @@ plant newPlant(float scale,
   float dh, // delta height per day
   int maturity); // Number of segments once fully grown
 
-void updatePlant(plant &p, float dt);
+bool updatePlant(plant &p, float dt);
